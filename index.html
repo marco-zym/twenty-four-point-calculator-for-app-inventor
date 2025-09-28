@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24点计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .numbers-display {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            color: #666;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .result-item {
+            background-color: #e8f4f8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007cba;
+        }
+        .no-solution {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 18px;
+            padding: 20px;
+        }
+        .solution-count {
+            text-align: center;
+            color: #666;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>24点计算器</h1>
+        <div id="numbersDisplay" class="numbers-display"></div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const numbers = [];
+            
+            // 从URL参数获取四个数字 (n1, n2, n3, n4)
+            for (let i = 1; i <= 4; i++) {
+                const param = urlParams.get(`n${i}`);
+                if (param !== null) {
+                    const num = parseInt(param);
+                    if (!isNaN(num) && num >= 1 && num <= 13) {
+                        numbers.push(num);
+                    }
+                }
+            }
+            
+            return numbers;
+        }
+
+        // 生成所有数字的排列
+        function getPermutations(arr) {
+            if (arr.length <= 1) return [arr];
+            
+            const result = [];
+            for (let i = 0; i < arr.length; i++) {
+                const current = arr[i];
+                const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+                const remainingPerms = getPermutations(remaining);
+                
+                for (let perm of remainingPerms) {
+                    result.push([current].concat(perm));
+                }
+            }
+            
+            return result;
+        }
+
+        // 生成所有运算符组合
+        function getOperators() {
+            const ops = ['+', '-', '*', '/'];
+            const result = [];
+            
+            // 生成所有三元运算符组合 (三个运算符)
+            for (let op1 of ops) {
+                for (let op2 of ops) {
+                    for (let op3 of ops) {
+                        result.push([op1, op2, op3]);
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        // 计算表达式 (考虑运算符优先级)
+        function calculateExpression(a, b, c, d, op1, op2, op3) {
+            // 按照运算符优先级计算：先乘除后加减
+            // 这里我们尝试不同的括号组合来找到所有可能的解
+            
+            // 方法1: ((a op1 b) op2 c) op3 d
+            try {
+                const expr1 = `((${a} ${op1} ${b}) ${op2} ${c}) ${op3} ${d}`;
+                const result1 = eval(expr1);
+                if (Math.abs(result1 - 24) < 0.0001) {
+                    return { expression: expr1, result: result1 };
+                }
+            } catch (e) {
+                // 忽略错误
+            }
+            
+            // 方法2: (a op1 b) op2 (c op3 d)
+            try {
+                const expr2 = `(${a} ${op1} ${b}) ${op2} (${c} ${op3} ${d})`;
+                const result2 = eval(expr2);
+                if (Math.abs(result2 - 24) < 0.0001) {
+                    return { expression: expr2, result: result2 };
+                }
+            } catch (e) {
+                // 忽略错误
+            }
+            
+            // 方法3: (a op1 (b op2 c)) op3 d
+            try {
+                const expr3 = `(${a} ${op1} (${b} ${op2} ${c})) ${op3} ${d}`;
+                const result3 = eval(expr3);
+                if (Math.abs(result3 - 24) < 0.0001) {
+                    return { expression: expr3, result: result3 };
+                }
+            } catch (e) {
+                // 忽略错误
+            }
+            
+            // 方法4: a op1 ((b op2 c) op3 d)
+            try {
+                const expr4 = `${a} ${op1} ((${b} ${op2} ${c}) ${op3} ${d})`;
+                const result4 = eval(expr4);
+                if (Math.abs(result4 - 24) < 0.0001) {
+                    return { expression: expr4, result: result4 };
+                }
+            } catch (e) {
+                // 忽略错误
+            }
+            
+            // 方法5: a op1 (b op2 (c op3 d))
+            try {
+                const expr5 = `${a} ${op1} (${b} ${op2} (${c} ${op3} ${d}))`;
+                const result5 = eval(expr5);
+                if (Math.abs(result5 - 24) < 0.0001) {
+                    return { expression: expr5, result: result5 };
+                }
+            } catch (e) {
+                // 忽略错误
+            }
+            
+            return null;
+        }
+
+        // 计算所有可能的解
+        function solve24(numbers) {
+            const solutions = [];
+            const permutations = getPermutations(numbers);
+            const operators = getOperators();
+            
+            for (let perm of permutations) {
+                for (let op of operators) {
+                    const result = calculateExpression(
+                        perm[0], perm[1], perm[2], perm[3],
+                        op[0], op[1], op[2]
+                    );
+                    
+                    if (result) {
+                        solutions.push(result);
+                    }
+                }
+            }
+            
+            // 去重
+            const uniqueSolutions = [];
+            const seenExpressions = new Set();
+            
+            for (let solution of solutions) {
+                if (!seenExpressions.has(solution.expression)) {
+                    seenExpressions.add(solution.expression);
+                    uniqueSolutions.push(solution);
+                }
+            }
+            
+            return uniqueSolutions;
+        }
+
+        // 显示结果
+        function displayResults(numbers, solutions) {
+            const numbersDisplay = document.getElementById('numbersDisplay');
+            const resultsDiv = document.getElementById('results');
+            
+            // 显示数字
+            numbersDisplay.innerHTML = `输入的数字: <strong>${numbers.join(', ')}</strong>`;
+            
+            // 显示结果
+            if (solutions.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-solution">没有找到能组成24点的表达式</div>';
+            } else {
+                let html = `<div class="solution-count">找到 ${solutions.length} 个解:</div>`;
+                
+                solutions.forEach((solution, index) => {
+                    html += `
+                        <div class="result-item">
+                            <strong>解 ${index + 1}:</strong><br>
+                            ${solution.expression} = ${solution.result}
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = html;
+            }
+        }
+
+        // 主函数
+        function main() {
+            const numbers = getUrlParams();
+            
+            if (numbers.length !== 4) {
+                document.getElementById('numbersDisplay').innerHTML = 
+                    '<div class="error">请在URL中提供四个数字参数 (n1, n2, n3, n4)，例如: ?n1=3&n2=4&n3=5&n4=6</div>';
+                return;
+            }
+            
+            try {
+                const solutions = solve24(numbers);
+                displayResults(numbers, solutions);
+            } catch (error) {
+                document.getElementById('numbersDisplay').innerHTML = 
+                    '<div class="error">计算过程中发生错误</div>';
+            }
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', main);
+    </script>
+</body>
+</html>
