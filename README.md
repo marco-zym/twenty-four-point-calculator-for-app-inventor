@@ -1,7 +1,7 @@
 # 24点计算器
 
 ## 使用方法
-1. 在安卓网页中合适的地方添加网页。
+1. 在安卓软件中合适的地方添加网页。
 2. 输入网页浏览器网站“https://marco-zym.github.io/twenty-four-point-calculator-for-app-inventor/?”。
 3. 在“?”后添加参数“n1=数字&n2=数字&n3=数字&n4=数字”。
 
